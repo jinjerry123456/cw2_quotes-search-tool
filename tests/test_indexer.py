@@ -26,6 +26,10 @@ def test_build_index_records_frequency_and_positions() -> None:
     assert good_postings["frequency"] == 2
     assert good_postings["positions"] == [0, 2]
     assert index_data["pages"]["https://quotes.toscrape.com/page/1/"]["word_count"] == 4
+    assert index_data["pages"]["https://quotes.toscrape.com/page/1/"]["unique_word_count"] == 3
+    assert index_data["metadata"]["total_pages"] == 1
+    assert index_data["metadata"]["total_terms"] == 3
+    assert index_data["metadata"]["total_tokens"] == 4
 
 
 def test_build_index_handles_empty_text() -> None:

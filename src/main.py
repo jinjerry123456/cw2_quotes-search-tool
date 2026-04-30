@@ -34,23 +34,35 @@ def build_command() -> None:
 
 def load_command() -> None:
     index_data = _load_index_or_exit()
-    page_count = len(index_data.get("pages", {}))
-    term_count = len(index_data.get("index", {}))
+    metadata = index_data.get("metadata", {})
+    page_count = metadata.get("total_pages", len(index_data.get("pages", {})))
+    term_count = metadata.get("total_terms", len(index_data.get("index", {})))
+    token_count = metadata.get("total_tokens")
     print(f"Loaded index from {INDEX_PATH}.")
     print(f"Pages: {page_count}, unique terms: {term_count}.")
+    if token_count is not None:
+        print(f"Total tokens indexed: {token_count}.")
 
 
 def print_command(word: str) -> None:
     index_data = _load_index_or_exit()
     engine = SearchEngine(index_data)
+    normalized_word = engine._normalize_single_word(word)
+    if not normalized_word:
+        print("Please provide at least one searchable word.")
+        return
+
     postings = engine.get_word_postings(word)
 
     if not postings:
-        print(f"No index entry found for '{word}'.")
+        print(f"No index entry found for '{normalized_word}'.")
         return
 
-    print(f"Inverted index entry for '{word}':")
-    for url, stats in postings.items():
+    print(f"Inverted index entry for '{normalized_word}':")
+    for url, stats in sorted(
+        postings.items(),
+        key=lambda item: (-item[1]["frequency"], item[0]),
+    ):
         print(
             f"- {url} | frequency={stats['frequency']} | "
             f"positions={stats['positions']}"
@@ -59,7 +71,8 @@ def print_command(word: str) -> None:
 
 def find_command(query_terms: list[str]) -> None:
     query = " ".join(query_terms).strip()
-    if not query:
+    normalised_terms = SearchEngine.normalise_query_terms(query)
+    if not normalised_terms:
         print("Please provide at least one search term.")
         return
 
@@ -73,12 +86,15 @@ def find_command(query_terms: list[str]) -> None:
         return
 
     if not results:
-        print(f"No pages contain all terms in query: '{query}'.")
+        print(f"No pages contain all terms in query: '{' '.join(normalised_terms)}'.")
         return
 
-    print(f"Pages containing all terms in '{query}':")
+    print(f"Pages containing all terms in '{' '.join(normalised_terms)}':")
     for result in results:
-        print(f"- {result['title']} | {result['url']} | score={result['score']}")
+        print(
+            f"- {result['title']} | {result['url']} | "
+            f"score={result['score']} | best_span={result['best_span']}"
+        )
 
 
 def _load_index_or_exit() -> dict:

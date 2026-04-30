@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -19,12 +20,15 @@ class InvertedIndexer:
     def build_index(self, pages: list[CrawledPage]) -> dict[str, Any]:
         index: dict[str, dict[str, dict[str, list[int] | int]]] = {}
         page_metadata: dict[str, dict[str, str | int]] = {}
+        total_tokens = 0
 
         for page in pages:
             tokens = self.tokenize(page.text)
+            total_tokens += len(tokens)
             page_metadata[page.url] = {
                 "title": page.title,
                 "word_count": len(tokens),
+                "unique_word_count": len(set(tokens)),
             }
 
             for position, token in enumerate(tokens):
@@ -37,6 +41,12 @@ class InvertedIndexer:
                 page_entry["positions"].append(position)
 
         return {
+            "metadata": {
+                "indexed_at_utc": datetime.now(timezone.utc).isoformat(),
+                "total_pages": len(page_metadata),
+                "total_terms": len(index),
+                "total_tokens": total_tokens,
+            },
             "pages": page_metadata,
             "index": index,
         }
