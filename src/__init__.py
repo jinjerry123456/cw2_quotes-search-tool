@@ -1,0 +1,1 @@
+"""Quotes search tool package."""

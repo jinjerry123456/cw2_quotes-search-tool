@@ -131,3 +131,25 @@ def test_is_crawlable_url_only_accepts_quote_listing_pages() -> None:
     assert not crawler.is_crawlable_url(
         "https://quotes.toscrape.com/author/Albert-Einstein/"
     )
+
+
+def test_crawl_with_report_continues_after_page_failure() -> None:
+    base_url = "https://quotes.toscrape.com/"
+    page_two = "https://quotes.toscrape.com/page/2/"
+    crawler = WebsiteCrawler(base_url=base_url)
+
+    def fake_fetch_page(url: str) -> str | None:
+        if url == base_url:
+            return (
+                "<html><head><title>Home</title></head>"
+                '<body><a href="/page/2/">2</a></body></html>'
+            )
+        return None
+
+    crawler.fetch_page = Mock(side_effect=fake_fetch_page)
+
+    report = crawler.crawl_with_report()
+
+    assert [page.url for page in report.pages] == [base_url]
+    assert report.failed_urls == [page_two]
+    assert page_two in report.visited_urls

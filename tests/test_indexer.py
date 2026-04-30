@@ -45,3 +45,22 @@ def test_build_index_handles_empty_text() -> None:
 
     assert index_data["pages"]["https://quotes.toscrape.com/page/empty/"]["word_count"] == 0
     assert index_data["index"] == {}
+
+
+def test_save_and_load_index_round_trip(tmp_path) -> None:
+    pages = [
+        CrawledPage(
+            url="https://quotes.toscrape.com/page/1/",
+            title="Page 1",
+            text="Good friends good books",
+        )
+    ]
+    indexer = InvertedIndexer()
+    index_data = indexer.build_index(pages)
+    output_path = tmp_path / "nested" / "index.json"
+
+    indexer.save_index(index_data, output_path)
+    loaded = indexer.load_index(output_path)
+
+    assert output_path.exists()
+    assert loaded == index_data
