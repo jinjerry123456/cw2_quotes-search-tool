@@ -67,6 +67,12 @@ Run the test suite with:
 pytest
 ```
 
+## Generative AI (GenAI)
+
+This module’s coursework requires a declaration and critical reflection on any GenAI use.
+See **[GENAI_REFLECTION.md](./GENAI_REFLECTION.md)** for a written statement and reflection
+you can align with your video (edit the bracketed placeholders to match your actual tools).
+
 ## Notes
 
 - The crawler enforces a politeness delay of at least 6 seconds between requests.
