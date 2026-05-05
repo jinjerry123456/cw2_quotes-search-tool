@@ -10,7 +10,7 @@ from typing import Any
 
 from src.crawler import CrawledPage
 
-
+# Lowercase alphanumerics + apostrophe (regex) -> matches coursework "case-insensitive" word model on disk.
 TOKEN_PATTERN = re.compile(r"[a-z0-9']+")
 
 
@@ -25,6 +25,7 @@ class InvertedIndexer:
         for page in pages:
             tokens = self.tokenize(page.text)
             total_tokens += len(tokens)
+            # Per-URL stats alongside postings -> `find` can print human titles without scanning the index tree.
             page_metadata[page.url] = {
                 "title": page.title,
                 "word_count": len(tokens),
@@ -32,6 +33,7 @@ class InvertedIndexer:
             }
 
             for position, token in enumerate(tokens):
+                # Nested dict + append positions -> classic inverted index: term -> {url: freq, where it appeared}.
                 postings = index.setdefault(token, {})
                 page_entry = postings.setdefault(
                     page.url,
@@ -58,6 +60,7 @@ class InvertedIndexer:
     @staticmethod
     def save_index(index_data: dict[str, Any], output_path: str | Path) -> None:
         path = Path(output_path)
+        # mkdir -p on `data/` -> `build` works on a fresh clone without pre-creating folders.
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("w", encoding="utf-8") as handle:
             json.dump(index_data, handle, indent=2)

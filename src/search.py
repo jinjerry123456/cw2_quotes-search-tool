@@ -27,17 +27,20 @@ class SearchEngine:
         candidate_sets = []
         for term in terms:
             postings = self.index.get(term, {})
+            # URL set per term -> later intersection implements Boolean AND across the whole query.
             candidate_sets.append(set(postings.keys()))
 
         if not candidate_sets:
             return []
 
+        # Intersection of all term URL sets -> only pages that contain every token at least once.
         matching_urls = set.intersection(*candidate_sets)
         ranked_results = []
 
         for url in matching_urls:
             total_frequency = sum(self.index[term][url]["frequency"] for term in terms)
             first_positions = [self.index[term][url]["positions"][0] for term in terms]
+            # Span across first occurrences -> rough proximity bonus when ranking multi-word hits.
             best_span = max(first_positions) - min(first_positions) if len(terms) > 1 else 0
             ranked_results.append(
                 {
@@ -49,6 +52,7 @@ class SearchEngine:
                 }
             )
 
+        # Higher score first, tighter span second, URL last -> deterministic, explainable ordering for demos.
         ranked_results.sort(key=lambda item: (-item["score"], item["best_span"], item["url"]))
         return ranked_results
 
@@ -59,6 +63,7 @@ class SearchEngine:
         seen: set[str] = set()
         terms: list[str] = []
         for term in raw_terms:
+            # Skip repeats but keep first-seen order -> `find good good` behaves like `find good`.
             if term in seen:
                 continue
             seen.add(term)

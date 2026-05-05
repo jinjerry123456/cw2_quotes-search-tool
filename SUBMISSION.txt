@@ -1,0 +1,19 @@
+COMP/XJCO3011 — Coursework 2: Search Engine Tool
+Electronic submission — required links
+================================================
+
+1) Video demonstration (5-minute demonstration)
+https://youtu.be/E2uo-TqQmIk
+
+2) GitHub repository (source code, README, tests, data/)
+https://github.com/jinjerry123456/cw2_quotes-search-tool
+
+(Equivalent clone URL: https://github.com/jinjerry123456/cw2_quotes-search-tool.git)
+
+3) Compiled inverted index file
+Submit separately on Minerva as an additional attachment (or follow local Minerva instructions if only one upload slot is available).
+
+File to attach: data/index.json from the repository above (local copy path in project: data/index.json).
+
+================================================
+Before submitting: open the YouTube link and the GitHub repository in a private/incognito window to confirm both are accessible to markers.

@@ -15,8 +15,10 @@ from bs4 import BeautifulSoup
 
 DEFAULT_BASE_URL = "https://quotes.toscrape.com/"
 REQUEST_TIMEOUT = 10
+# Sleep between GETs so elapsed gap >= 6s -> satisfies coursework politeness window.
 POLITENESS_DELAY_SECONDS = 6
 DEFAULT_USER_AGENT = "quotes-search-coursework-bot/1.0"
+# Only `/` and `/page/n/` paths -> skip tag/author archives so each quote is indexed once from list pages.
 QUOTE_PAGE_PATTERN = re.compile(r"^/page/\d+/$")
 
 
@@ -49,11 +51,13 @@ class WebsiteCrawler:
         timeout: int = REQUEST_TIMEOUT,
         session: requests.Session | None = None,
     ) -> None:
+        # Normalise to trailing slash -> `urljoin` resolves relative links consistently off the site root.
         self.base_url = base_url.rstrip("/") + "/"
         self.delay_seconds = delay_seconds
         self.timeout = timeout
         self.session = session or requests.Session()
         self._last_request_time: float | None = None
+        # Cache allowed host -> cheap same-site check before we enqueue external URLs.
         self._base_domain = urlparse(self.base_url).netloc
         self.session.headers.setdefault("User-Agent", DEFAULT_USER_AGENT)
 
@@ -63,6 +67,7 @@ class WebsiteCrawler:
 
     def crawl_with_report(self) -> CrawlReport:
         """Breadth-first crawl across quote listing pages for the searchable corpus."""
+        # deque BFS + `visited`/`queued` sets -> FIFO crawl order, no duplicate fetches, no self-loop enqueue.
         queue: deque[str] = deque([self.base_url])
         visited: set[str] = set()
         queued: set[str] = {self.base_url}
@@ -77,6 +82,7 @@ class WebsiteCrawler:
 
             visited.add(url)
             html = self.fetch_page(url)
+            # Treat network/HTML-type failures uniformly -> build continues, diagnostics list stays honest.
             if html is None:
                 failed_urls.append(url)
                 continue
@@ -107,9 +113,11 @@ class WebsiteCrawler:
         self._wait_if_needed()
         try:
             response = self.session.get(url, timeout=self.timeout)
+            # Timestamp after the request returns -> delay measures wall time between completed responses.
             self._last_request_time = time.time()
             response.raise_for_status()
             content_type = response.headers.get("Content-Type", "").lower()
+            # Reject non-HTML bodies -> avoids parsing PDFs/images as soup when servers mis-link.
             if "text/html" not in content_type:
                 return None
         except requests.RequestException:
@@ -122,6 +130,7 @@ class WebsiteCrawler:
 
         elapsed = time.time() - self._last_request_time
         remaining = self.delay_seconds - elapsed
+        # Top-up sleep only -> fast startup on first URL, still enforces full gap afterwards.
         if remaining > 0:
             time.sleep(remaining)
 
@@ -151,6 +160,7 @@ class WebsiteCrawler:
         if parsed.netloc != self._base_domain:
             return None
 
+        # Drop `#frag` and `?query` + force directory slash -> one canonical string per page for sets/index keys.
         cleaned = parsed._replace(fragment="", query="")
         path = cleaned.path or "/"
         if path != "/" and not path.endswith("/"):
@@ -161,6 +171,7 @@ class WebsiteCrawler:
     def is_crawlable_url(self, url: str) -> bool:
         """Restrict crawling to the canonical quote-listing pages."""
         parsed = urlparse(url)
+        # Lowercase path only -> Windows servers are rare here, but comparisons stay stable vs mixed-case links.
         path = parsed.path.lower()
         if parsed.netloc != self._base_domain:
             return False
@@ -193,6 +204,7 @@ class WebsiteCrawler:
         if author_details:
             text_parts.append(author_details.get_text(" ", strip=True))
 
+        # Fallback to whole-page text -> still indexes something if the site markup changes unexpectedly.
         if not text_parts:
             text_parts.append(soup.get_text(" ", strip=True))
 

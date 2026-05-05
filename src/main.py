@@ -10,7 +10,7 @@ from src.crawler import WebsiteCrawler
 from src.indexer import InvertedIndexer
 from src.search import SearchEngine
 
-
+# Fixed path under repo root -> markers and `load` always hit the same artefact without extra CLI flags.
 INDEX_PATH = Path("data/index.json")
 
 
@@ -19,6 +19,7 @@ def build_command() -> None:
     indexer = InvertedIndexer()
 
     start_time = time.time()
+    # Crawl then index in one process -> index always matches the exact corpus we just fetched.
     report = crawler.crawl_with_report()
     index_data = indexer.build_index(report.pages)
     indexer.save_index(index_data, INDEX_PATH)
@@ -47,11 +48,13 @@ def load_command() -> None:
 def print_command(word: str) -> None:
     index_data = _load_index_or_exit()
     engine = SearchEngine(index_data)
+    # First-token normalisation -> rejects punctuation-only input before we hit the index.
     normalized_word = engine._normalize_single_word(word)
     if not normalized_word:
         print("Please provide at least one searchable word.")
         return
 
+    # Pass raw `word` into engine -> same lowercasing/token rules as indexing, so CLI matches stored keys.
     postings = engine.get_word_postings(word)
 
     if not postings:
@@ -59,6 +62,7 @@ def print_command(word: str) -> None:
         return
 
     print(f"Inverted index entry for '{normalized_word}':")
+    # Sort by descending frequency, then URL -> strongest evidence first, deterministic tie-break.
     for url, stats in sorted(
         postings.items(),
         key=lambda item: (-item[1]["frequency"], item[0]),
@@ -70,6 +74,7 @@ def print_command(word: str) -> None:
 
 
 def find_command(query_terms: list[str]) -> None:
+    # `nargs="*"` gives a list -> join so `find good friends` and `find "good friends"` both become one query string.
     query = " ".join(query_terms).strip()
     normalised_terms = SearchEngine.normalise_query_terms(query)
     if not normalised_terms:
@@ -98,6 +103,7 @@ def find_command(query_terms: list[str]) -> None:
 
 
 def _load_index_or_exit() -> dict:
+    # Hard fail fast -> clearer UX than a traceback when students skip `build`.
     if not INDEX_PATH.exists():
         raise SystemExit(
             "Index file not found. Run 'python -m src.main build' first."
@@ -107,6 +113,7 @@ def _load_index_or_exit() -> dict:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Quotes search coursework tool")
+    # Subcommands mirror brief (`build`, `load`, `print`, `find`) -> one entrypoint, four behaviours.
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     subparsers.add_parser("build")
