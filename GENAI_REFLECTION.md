@@ -1,79 +1,79 @@
-# 生成式人工智能（GenAI）使用声明与批判性反思
+# Generative AI (GenAI): Declaration and Critical Reflection
 
-本文档符合作业（COMP/XJCO3011 Coursework 2）对 **GenAI 声明** 与 **批判性评价（约占总成绩 15%）** 的要求，可作为录制视频时的提纲；请根据个人实际使用情况修改括号内或标注「请填写」的内容。
-
----
-
-## 1. 声明：使用了哪些工具、用于什么目的
-
-| 工具（请按实际填写） | 主要用途 |
-|----------------------|----------|
-| 例如：大学提供的 **Microsoft Copilot（安全渠道）** / **Cursor 内置助手** 等 | 解释 `requests`、`BeautifulSoup` 的用法与常见模式；讨论倒排索引应保存哪些字段；起草 `argparse` 子命令结构；为 `pytest` 与 `unittest.mock` 编写示例测试骨架；阅读错误栈并建议排查方向 |
-| （未使用则写「无」并跳到第 6 节） | |
-
-**原则：** 核心算法逻辑（例如多词查询取 URL 交集、按频率与跨度排序）与是否只爬列表页等 **产品决策** 均由本人在理解作业要求后拍板；GenAI 主要加速文档化、样板代码与测试草稿，**最终每一行提交代码本人均能解释**。
+This document meets the COMP/XJCO3011 Coursework 2 requirements for **GenAI declaration** and **critical evaluation (approximately 15% of the module mark)**. You may use it as an outline when recording your video. Please edit any bracketed or “fill in” placeholders so they match **your actual** use of tools.
 
 ---
 
-## 2. 具体帮助：GenAI 在哪些地方起了正面作用
+## 1. Declaration: which tools were used, and for what purpose
 
-1. **BeautifulSoup 与页面解析**  
-   在提取 `.quote`、`.text`、`.author`、`.tag` 等结构时，GenAI 帮助快速对照文档，减少在官方文档中逐项查找的时间；**最终选择器仍以我在真实页面上的验证为准**，避免误选到导航栏等噪声。
+| Tool (fill in accurately) | Main purpose |
+|---------------------------|--------------|
+| For example: the University’s **Microsoft Copilot (secure access)** / **Cursor inline assistant**, etc. | Explaining common patterns for `requests` and `BeautifulSoup`; discussing which fields the inverted index should store; drafting `argparse` subcommand structure; sketching example tests with `pytest` and `unittest.mock`; reading stack traces and suggesting debugging directions |
+| (If none were used, write **None** and go to Section 6.) | |
 
-2. **礼貌窗口（politeness）的实现方式**  
-   作业要求「至少 6 秒间隔」。GenAI 曾给出「每次请求后 `sleep(6)`」与「根据上次请求时间计算剩余等待」等不同写法；我采用 **基于上次成功请求时间戳计算剩余等待** 的方式，并在测试中 mock `time.sleep` / `time.time` 验证间隔逻辑，**这部分是在理解两种差异后自己做的取舍**。
-
-3. **测试与 mock**  
-   GenAI 提供了对 `requests.Session.get` 打桩、模拟非 HTML `Content-Type`、模拟请求失败等 pytest 模式的范例，缩短了测试文件从零到可运行的时间；**边界用例（空文本页面、爬取失败后仍继续队列等）由本人根据作业 rubric 补充**。
-
-4. **项目结构与 README 条目**  
-   对照作业规定的 `src/`、`tests/`、`data/` 布局，GenAI 帮助检查是否遗漏 `requirements.txt` 或命令行示例，减少低级疏漏。
+**Principle:** Core algorithmic choices (e.g. conjunctive multi-word queries via URL intersection, ranking by frequency and span) and product decisions such as **restricting the crawl to listing pages** were made by me after reading the brief. GenAI mainly sped up documentation, boilerplate, and test drafts; **I can explain every line of submitted code.**
 
 ---
 
-## 3. 具体阻碍：GenAI 在哪些地方帮了倒忙或需要纠正
+## 2. Specific help: where GenAI was genuinely useful
 
-1. **爬取范围「越大越好」的误导倾向**  
-   初稿若跟随「爬站内所有链接」的建议，容易把 tag、author 页重复索引同一语录。我根据作业目标（**高效、可检索的语录语料**）改为 **仅收录首页与 `/page/n/`**，并在 README 中写明理由；这是 **违背初版 AI 建议、以领域理解为准** 的例子。
+1. **Beautiful Soup and page parsing**  
+   When extracting `.quote`, `.text`, `.author`, `.tag`, and related structures, GenAI helped cross-check ideas against documentation and reduced time spent searching the official docs line by line. **Final selectors were validated on the real site** so I did not accidentally index navigation chrome as content.
 
-2. **倒排索引字段设计**  
-   GenAI 有时会建议仅存「文档列表」而不存位置；作业明确要求统计量（如频率、位置等）。我坚持在索引中保存 **`frequency` 与 `positions`**，以满足 `print` 与后续 `find` 排序的需要。
+2. **Politeness window implementation**  
+   The brief requires **at least six seconds** between successive requests. GenAI suggested different patterns—e.g. “always `sleep(6)` after each request” versus “compute remaining wait from the last request timestamp”. I chose **timestamp-based waiting** and verified the delay logic in tests by mocking `time.sleep` and `time.time`. **Choosing between those patterns was my own decision after understanding the trade-offs.**
 
-3. **代码正确性不能默认信任**  
-   AI 生成的片段曾出现与当前 `SearchEngine` API 不一致的调用方式，或遗漏 `Path` 创建父目录等细节；均通过 **本地运行 `pytest` 与手动跑 CLI** 发现并修正。说明 **AI 加速起草，但不能替代测试与代码审阅**。
+3. **Tests and mocking**  
+   GenAI provided useful patterns for stubbing `requests.Session.get`, simulating non-HTML `Content-Type` headers, and simulating request failures in `pytest`, which shortened the path from an empty test file to a runnable suite. **Edge cases** such as empty text pages and continuing the crawl queue after a failed fetch were **added by me** against the coursework rubric.
 
----
-
-## 4. 对 AI 产出代码质量的评价
-
-- **可读性与模块化**：分 `crawler` / `indexer` / `search` / `main` 符合单一职责，便于在视频中分块讲解；类型注解与数据结构整体清晰。  
-- **正确性**：以测试与对照作业条文为准；当前测试套件通过，但 **若网络或目标站结构变更，仍需人工维护爬虫规则**。  
-- **与「满分标准」的差距**：GenAI 无法代替你在视频中 **口头论证设计取舍**；高级特性（如 TF-IDF、全站爬取策略辩论）若未实现，也应在反思中诚实说明 **范围选择** 而非夸大。
+4. **Project layout and README checks**  
+   Against the required `src/`, `tests/`, and `data/` layout, GenAI helped catch omissions such as `requirements.txt` entries or missing CLI usage examples, reducing small but costly mistakes.
 
 ---
 
-## 5. 对学习过程与时间管理的反思
+## 3. Specific hindrances: where GenAI was unhelpful or had to be corrected
 
-- **学习影响**：GenAI 缩短了查 API 的时间，但若跳过阅读官方文档，容易「能跑但不懂」；本项目中有意对照 **Requests / BeautifulSoup / pytest** 文档核对关键调用，以巩固模块内容。  
-- **调试挑战**：理解 AI 给出的 mock 与真实异步网络行为的差异，需要自己动手打断点或打印；这是 **无法外包给 AI 的建模能力**。  
-- **时间管理**：用 AI 写测试骨架省下的时间，应投入到 **边界情况、视频录制与 Git 提交信息** 上，否则整体成绩仍受非代码项制约。
+1. **“Crawl everything” bias**  
+   If I had followed a naive “follow every internal link” suggestion, tag and author pages would **duplicate** the same quotes in the index. Given the goal of an **efficient, searchable quote corpus**, I restricted crawling to the **home page and `/page/n/` only**, and documented the rationale in `README.md`. This is an example of **rejecting early AI advice in favour of domain-appropriate scope**.
 
----
+2. **Inverted index field design**  
+   GenAI sometimes suggested storing only a **document list** without positions. The brief explicitly asks for **statistics** (e.g. frequency, position). I kept **`frequency` and `positions`** in the index so `print` behaves as specified and `find` can use simple ranking signals.
 
-## 6. 若未使用 GenAI（可选段落）
-
-若你全程未使用任何生成式工具，请将上文改为诚实声明，并侧重：**独立查文档的耗时、调试策略、以及没有 AI 时对数据结构理解是否更深**；作业同样接受「未使用」的反思路径。
-
----
-
-## 7. 视频口播压缩版（约 0.5–1 分钟，请脱稿自然讲述）
-
-> 我使用了 [请填：Copilot / Cursor 等]，主要用于快速查 BeautifulSoup 选择器、argparse 子命令和 pytest mock 的写法。  
-> 有帮助的例子是测试里模拟 HTTP 失败和非 HTML 响应，节省了查资料时间。  
-> 也有帮倒忙的地方：模型倾向建议爬全站所有链接，会导致语录重复，我改成只爬首页和分页并写进 README。  
-> AI 给的片段我全部用测试和手动运行 CLI 核对过；倒排索引里我保留了频率和位置以满足作业统计要求。  
-> 总的来说，GenAI 提高了打字速度，但**设计决策和正确性仍要靠自己**；省下的时间我用来补边界测试和准备这次演示。
+3. **Correctness cannot be assumed**  
+   Generated snippets occasionally mismatched the current `SearchEngine` API or omitted details such as creating parent directories for `Path` before saving. I caught these issues through **`pytest` and manual CLI runs**. **GenAI accelerates drafting; it does not replace testing and code review.**
 
 ---
 
-**学术诚信：** 以上内容应反映你的 **真实** 使用情况；与视频中的口头声明保持一致。非声明或虚假声明可能构成学术不端。
+## 4. Evaluation of the quality of AI-assisted code
+
+- **Readability and modularity:** Splitting `crawler`, `indexer`, `search`, and `main` follows single responsibility and is easy to explain in the video; type hints and data structures are generally clear.  
+- **Correctness:** Judged against tests and the brief; the current test suite passes, but **if the live site or network behaviour changes, crawler rules may still need manual maintenance**.  
+- **Gap vs. an “outstanding” narrative:** GenAI cannot replace **verbal justification of design trade-offs** in the video. If advanced features (e.g. TF–IDF, full-site crawling) are **not** implemented, the reflection should honestly state **scope choices** rather than overstating novelty.
+
+---
+
+## 5. Reflection on learning and time management
+
+- **Impact on learning:** GenAI reduced time spent looking up APIs, but skipping the official docs risks “runs but I cannot explain it”. For this project I deliberately cross-checked critical calls against the **Requests**, **BeautifulSoup**, and **pytest** documentation to consolidate module learning.  
+- **Debugging challenges:** Understanding the gap between mocked HTTP and real asynchronous network behaviour still required breakpoints and prints—**modelling work that cannot be outsourced to AI**.  
+- **Time management:** Time saved on test scaffolding should be reinvested in **edge cases, the video demonstration, and meaningful Git commit messages**; otherwise marks tied to non-code deliverables still dominate part of the grade.
+
+---
+
+## 6. If you did not use GenAI (optional section)
+
+If you did not use any generative tools, replace the sections above with an honest statement emphasising **time spent reading documentation independently**, your **debugging strategy**, and whether you felt you understood data structures **more deeply** without AI assistance. The brief also accepts a “no GenAI” reflection path.
+
+---
+
+## 7. Short spoken script for the video (~30–60 seconds; speak naturally)
+
+> I used **[fill in: Copilot / Cursor / etc.]**, mainly for quick reference on Beautiful Soup selectors, `argparse` subcommands, and `pytest` mocking patterns.  
+> A helpful example was mocking HTTP failures and non-HTML responses in tests, which saved documentation lookup time.  
+> A hindering example was the model’s tendency to suggest crawling **every** internal link, which would duplicate quotes; I restricted the crawl to the home page and paginated listing URLs and documented that in the README.  
+> I verified every AI-generated fragment with tests and manual CLI runs; I kept **frequency** and **positions** in the inverted index to meet the brief’s statistics requirement.  
+> Overall, GenAI increased typing speed, but **design decisions and correctness remain my responsibility**; I reinvested the time saved into edge-case tests and preparing this demonstration.
+
+---
+
+**Academic integrity (University of Leeds):** The statements above must reflect your **true** use of tools and must **match** what you say in the video. Non-declaration or misleading declaration of GenAI use may constitute **academic misconduct**.
