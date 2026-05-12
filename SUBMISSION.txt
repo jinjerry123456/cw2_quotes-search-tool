@@ -3,7 +3,7 @@ Electronic submission — required links
 ================================================
 
 1) Video demonstration (5-minute demonstration)
-https://youtu.be/E2uo-TqQmIk
+https://www.youtube.com/watch?v=xk-3HFcNMdk
 
 2) GitHub repository (source code, README, tests, data/)
 https://github.com/jinjerry123456/cw2_quotes-search-tool
